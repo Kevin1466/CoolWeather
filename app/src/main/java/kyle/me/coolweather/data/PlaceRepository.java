@@ -46,7 +46,9 @@ public class PlaceRepository {
                     @Override
                     public void onResponse(Call<List<Province>> call, Response<List<Province>> response) {
                         // TODO: 09/03/2019 save in disk
-                        liveData.postValue(new Resource().success(response.body()));
+                        List<Province> provinces = response.body();
+                        mPlaceDao.saveProvinceList(provinces);
+                        liveData.postValue(new Resource().success(provinces));
                     }
 
                     @Override
@@ -55,6 +57,8 @@ public class PlaceRepository {
                         liveData.postValue(new Resource().error(null, "load failed"));
                     }
                 });
+            } else {
+                liveData.postValue(new Resource<List<Province>>().success(provinceList));
             }
         });
         return liveData;
@@ -69,7 +73,12 @@ public class PlaceRepository {
                     @Override
                     public void onResponse(Call<List<City>> call, Response<List<City>> response) {
                         // TODO: 09/03/2019 save in disk
-                        liveData.postValue(new Resource().success(response.body()));
+                        List<City> cities = response.body();
+                        for (City city : cities) {
+                            city.provinceId = provinceId;
+                        }
+                        mPlaceDao.saveCityList(cities);
+                        liveData.postValue(new Resource().success(cities));
                     }
 
                     @Override
@@ -78,6 +87,8 @@ public class PlaceRepository {
                         liveData.postValue(new Resource().error(null, "load failed"));
                     }
                 });
+            } else {
+                liveData.postValue(new Resource<List<City>>().success(cityList));
             }
         });
         return liveData;
@@ -88,12 +99,22 @@ public class PlaceRepository {
         // FIXME: 09/03/2019
         //liveData.setValue(new Resource<>().loading(null));
         CoolWeatherExecutors.diskIO.execute(() -> {
-            List<County> cityList = mPlaceDao.getCountyList(cityId);
-            if (cityList.isEmpty()) {
+            List<County> countyList = mPlaceDao.getCountyList(cityId);
+            if (countyList.isEmpty()) {
                 mWeatherNetwork.fetchCountyList(provinceId, cityId, new Callback<List<County>>() {
                     @Override
                     public void onResponse(Call<List<County>> call, Response<List<County>> response) {
-                        liveData.postValue(new Resource().success(response.body()));
+                        CoolWeatherExecutors.diskIO.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                List<County> counties = response.body();
+                                for (County c : counties) {
+                                    c.cityId = cityId;
+                                }
+                                mPlaceDao.saveCountyList(counties);
+                                liveData.postValue(new Resource().success(counties));
+                            }
+                        });
                     }
 
                     @Override
@@ -102,6 +123,8 @@ public class PlaceRepository {
                         liveData.postValue(new Resource().error(null, "load failed"));
                     }
                 });
+            } else {
+                liveData.postValue(new Resource<List<County>>().success(countyList));
             }
         });
         return liveData;

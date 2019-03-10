@@ -20,6 +20,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import kyle.me.coolweather.MainActivity;
 import kyle.me.coolweather.R;
 import kyle.me.coolweather.data.Resource;
 import kyle.me.coolweather.data.model.place.City;
@@ -76,10 +77,19 @@ public class ChooseAreaFragment extends Fragment {
                 case LEVEL_COUNTY:
                     Activity thisActivity = getActivity();
                     String weatherId = areaViewModel.countyList.get(posation).weatherId;
-                    Intent intent = new Intent(thisActivity, WeatherActivity.class);
-                    intent.putExtra("weather_id", weatherId);
-                    startActivity(intent);
-                    thisActivity.finish();
+
+                    if (thisActivity instanceof MainActivity) {
+                        Intent intent = new Intent(thisActivity, WeatherActivity.class);
+                        intent.putExtra("weather_id", weatherId);
+                        startActivity(intent);
+                        thisActivity.finish();
+                    } else if (thisActivity instanceof WeatherActivity) {
+                        WeatherActivity weatherActivity = (WeatherActivity) thisActivity;
+                        weatherActivity.drawerLayout.closeDrawers();
+                        weatherActivity.swipeRefresh.setRefreshing(true);
+                        weatherActivity.weatherId = weatherId;
+                        weatherActivity.observeWeather(weatherActivity.mWeatherViewModel.refreshWeather(weatherId, MainActivity.KEY), true);
+                    }
             }
         });
         if (areaViewModel.dataList.isEmpty()) {
@@ -110,7 +120,7 @@ public class ChooseAreaFragment extends Fragment {
         handleData(areaViewModel.getProvinceList(), new Action<List<Province>>() {
             @Override
             public void act(List<Province> data) {
-                titleText.setText("China");
+                titleText.setText("中国");
                 backButton.setVisibility(View.GONE);
                 for (Province province : data) {
                     areaViewModel.dataList.add(province.provinceName);

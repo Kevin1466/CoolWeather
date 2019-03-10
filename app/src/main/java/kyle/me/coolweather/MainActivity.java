@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setMessage("请先在MainActivity中配置天气API的Key")
                     .setCancelable(false)
-                    .setPositiveButton("OK", (anInterface, i) -> finish())
+                    .setPositiveButton("确定", (anInterface, i) -> finish())
                     .show();
         } else {
             MainViewModel mainViewModel = ViewModelProviders.of(this, InjectorUtil.getMainModelFactory()).get(MainViewModel.class);

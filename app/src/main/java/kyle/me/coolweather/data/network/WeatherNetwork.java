@@ -30,6 +30,10 @@ public class WeatherNetwork {
         return sWeatherNetwork;
     }
 
+    public void fetchBingPic(Callback<String> callback) {
+        weatherService.getBingPck().enqueue(callback);
+    }
+
     public void fetchWeather(String weatherId, String key, Callback<HeWeather> callback) {
         weatherService.getWeather(weatherId, key).enqueue(callback);
     }
